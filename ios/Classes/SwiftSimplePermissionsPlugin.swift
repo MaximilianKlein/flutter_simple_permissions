@@ -4,7 +4,6 @@ import AVFoundation
 import Photos
 import CoreLocation
 import CoreMotion
-import Contacts
 
 public class SwiftSimplePermissionsPlugin: NSObject, FlutterPlugin, CLLocationManagerDelegate {
     var whenInUse = false
@@ -87,9 +86,6 @@ public class SwiftSimplePermissionsPlugin: NSObject, FlutterPlugin, CLLocationMa
             self.result = result
             requestLocationAlwaysPermission()
             
-        case "READ_CONTACTS", "WRITE_CONTACTS":
-            requestContactPermission(result: result)
-            
         case "READ_SMS":
             result("ready")
             
@@ -120,9 +116,6 @@ public class SwiftSimplePermissionsPlugin: NSObject, FlutterPlugin, CLLocationMa
         case "ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION", "WHEN_IN_USE_LOCATION":
             result(checkLocationWhenInUsePermission())
             
-        case "READ_CONTACTS", "WRITE_CONTACTS":
-            result(checkContactPermission())
-            
         case "ALWAYS_LOCATION":
             result(checkLocationAlwaysPermission())
           
@@ -146,9 +139,6 @@ public class SwiftSimplePermissionsPlugin: NSObject, FlutterPlugin, CLLocationMa
         switch(permission) {
         case "RECORD_AUDIO":
             result(getAudioPermissionStatus().rawValue)
-            
-        case "READ_CONTACTS", "WRITE_CONTACTS":
-            result(getContactPermissionStatus().rawValue)
             
         case "CAMERA":
             result(getCameraPermissionStatus().rawValue)
@@ -236,23 +226,6 @@ public class SwiftSimplePermissionsPlugin: NSObject, FlutterPlugin, CLLocationMa
         }
         else {
             self.result?(status == .authorizedAlways)
-        }
-    }
-    
-    //-----------------------------
-    // Contact
-    
-    private func getContactPermissionStatus() -> CNAuthorizationStatus {
-        return CNContactStore.authorizationStatus(for: CNEntityType.contacts)
-    }
-    
-    private func checkContactPermission() -> Bool {
-        return getContactPermissionStatus() == .authorized
-    }
-    
-    private func requestContactPermission(result: @escaping FlutterResult) -> Void {
-        CNContactStore().requestAccess(for: CNEntityType.contacts) { (access, error) in
-            result(access)
         }
     }
     
