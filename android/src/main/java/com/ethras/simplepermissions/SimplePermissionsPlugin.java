@@ -169,7 +169,11 @@ public class SimplePermissionsPlugin implements MethodCallHandler, PluginRegistr
             }
         }
         Log.i("SimplePermission", "Requesting permission status : " + status);
-        result.success(status);
+        Result result = this.result;
+        this.result = null;
+        if (result != null) {
+            result.success(status);
+        }
         return status == 3;
     }
 }
