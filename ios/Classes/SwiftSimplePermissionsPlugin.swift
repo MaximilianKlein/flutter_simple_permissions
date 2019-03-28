@@ -2,13 +2,11 @@ import Flutter
 import UIKit
 import AVFoundation
 import Photos
-import CoreLocation
 import CoreMotion
 
-public class SwiftSimplePermissionsPlugin: NSObject, FlutterPlugin, CLLocationManagerDelegate {
+public class SwiftSimplePermissionsPlugin: NSObject, FlutterPlugin {
     var whenInUse = false
     var result: FlutterResult? = nil
-    var locationManager = CLLocationManager()
     
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "simple_permissions", binaryMessenger: registrar.messenger())
@@ -17,7 +15,6 @@ public class SwiftSimplePermissionsPlugin: NSObject, FlutterPlugin, CLLocationMa
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        locationManager.delegate = self
         let method = call.method
         let dic = call.arguments as? [String: Any]
         
@@ -78,14 +75,6 @@ public class SwiftSimplePermissionsPlugin: NSObject, FlutterPlugin, CLLocationMa
         case "PHOTO_LIBRARY":
             requestPhotoLibraryPermission(result: result)
             
-        case "ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION", "WHEN_IN_USE_LOCATION":
-            self.result = result
-            requestLocationWhenInUsePermission()
-            
-        case "ALWAYS_LOCATION":
-            self.result = result
-            requestLocationAlwaysPermission()
-            
         case "READ_SMS":
             result("ready")
             
@@ -113,12 +102,6 @@ public class SwiftSimplePermissionsPlugin: NSObject, FlutterPlugin, CLLocationMa
         case "PHOTO_LIBRARY":
             result(checkPhotoLibraryPermission())
             
-        case "ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION", "WHEN_IN_USE_LOCATION":
-            result(checkLocationWhenInUsePermission())
-            
-        case "ALWAYS_LOCATION":
-            result(checkLocationAlwaysPermission())
-          
         case "READ_SMS":
             result(true)
             
@@ -146,27 +129,6 @@ public class SwiftSimplePermissionsPlugin: NSObject, FlutterPlugin, CLLocationMa
         case "PHOTO_LIBRARY":
             result(getPhotoLibraryPermissionStatus().rawValue)
             
-        case "ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION", "WHEN_IN_USE_LOCATION":
-            let status = CLLocationManager.authorizationStatus()
-            if (status == .authorizedAlways || status == .authorizedWhenInUse) {
-                result(3)
-            }
-            else {
-                result(status.rawValue)
-            }
-            
-        case "ALWAYS_LOCATION":
-            let status = CLLocationManager.authorizationStatus()
-            if (status == .authorizedAlways) {
-                result(3)
-            }
-            else if (status == .authorizedWhenInUse) {
-                result(1)
-            }
-            else {
-                result(status.rawValue)
-            }
-            
         case "READ_SMS":
             result(1)
             
@@ -184,50 +146,6 @@ public class SwiftSimplePermissionsPlugin: NSObject, FlutterPlugin, CLLocationMa
     
     //-----------------------------------------
     // Location
-    private func checkLocationAlwaysPermission() -> Bool {
-        return CLLocationManager.authorizationStatus() == .authorizedAlways
-    }
-    
-    private func checkLocationWhenInUsePermission() -> Bool {
-        let authStatus = CLLocationManager.authorizationStatus()
-        return  authStatus == .authorizedAlways  || authStatus == .authorizedWhenInUse
-    }
-    
-    private func requestLocationWhenInUsePermission() -> Void {
-        if (CLLocationManager.authorizationStatus() == .notDetermined) {
-            self.whenInUse = true
-            locationManager.requestWhenInUseAuthorization()
-        }
-        else  {
-            self.result?(checkLocationWhenInUsePermission())
-        }
-    }
-    
-    private func requestLocationAlwaysPermission() -> Void {
-        if (CLLocationManager.authorizationStatus() == .notDetermined) {
-            self.whenInUse = false
-            locationManager.requestAlwaysAuthorization()
-        }
-        else  {
-            self.result?(checkLocationAlwaysPermission())
-        }
-    }
-    
-    public func locationManager(_ manager: CLLocationManager,
-                                didChangeAuthorization status: CLAuthorizationStatus) {
-        if (whenInUse)  {
-            switch status {
-            case .authorizedAlways, .authorizedWhenInUse:
-                self.result?(true)
-                
-            default:
-                self.result?(false)
-            }
-        }
-        else {
-            self.result?(status == .authorizedAlways)
-        }
-    }
     
     //---------------------------------
     // Audio
